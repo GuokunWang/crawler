@@ -20,7 +20,6 @@
 # Go workspace file
 go.work
 go.sum
-crawler
 .vscode
 __debug_bin
 run.sh

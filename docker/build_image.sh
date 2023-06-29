@@ -24,10 +24,10 @@ export GOPROXY=https://goproxy.cn
 ##### build crawler #####
 CURR_DIR=$(dirname $(realpath -s "$0"))
 PROJ_DIR=$(dirname $CURR_DIR)
-#BRANCH=$(git rev-parse --abbrev-ref HEAD)
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 echo "项目目录： $PROJ_DIR"
-#echo "项目分支： $BRANCH"
+echo "项目分支： $BRANCH"
 cd $PROJ_DIR
 
 echo 'build crawler'
@@ -43,7 +43,6 @@ cp $PROJ_DIR/crawler ./crawler
 cp $PROJ_DIR/config.json ./config.json
 check 'copy crawler'
 
-#docker build -t crawler:$BRANCH -f Dockerfile .
-docker build -t crawler:v0.1 -f Dockerfile .
+docker build -t crawler:$BRANCH -f Dockerfile .
 check 'build crawler container'
 rm -fr ./crawler
