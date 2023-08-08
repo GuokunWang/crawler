@@ -29,6 +29,7 @@ var dingTalkClient = DingTalkClient{}
 func init() {
 	RegisterCrawler("penti", &PentiCrawler{})
 	RegisterCrawler("fuli", &FuliCrawler{})
+	RegisterCrawler("kexue", &KexueCrawler{})
 }
 
 func ConfigCrawler(confPath string) {
@@ -43,7 +44,7 @@ func ConfigCrawler(confPath string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-    
+
 	// init dingTalkClient first
 	err = json.Unmarshal(configs["dingTalk"], &dingTalkClient)
 	if err != nil {
