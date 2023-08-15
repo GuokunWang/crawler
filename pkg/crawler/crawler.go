@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"math/rand"
 	"reflect"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -30,6 +31,7 @@ func init() {
 	RegisterCrawler("penti", &PentiCrawler{})
 	RegisterCrawler("fuli", &FuliCrawler{})
 	RegisterCrawler("kexue", &KexueCrawler{})
+	RegisterCrawler("boduan", &BoduanCrawler{})
 }
 
 func ConfigCrawler(confPath string) {
@@ -72,16 +74,21 @@ func RegisterCrawler(name string, crawler Crawler) {
 }
 
 func Run(db *gorm.DB) {
+	r := rand.New(rand.NewSource(55))
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors: true,
+		FullTimestamp: true,
+	})
+	interval := 5 + r.Intn(6)
+
 	go processArticle(db)
 	for {
-		cst := time.FixedZone("CST", 8*3600) // 东八
-		now := time.Now().In(cst)
-		if now.Hour() >= 16 && now.Hour() < 18 && now.Minute()%10 == 0 {
-			for _, crawler := range crawlers {
-				crawler.Crawl()
-			}
+		log.Infof("sleep for %d minute", interval)
+		time.Sleep(time.Duration(interval) * time.Minute)
+		for _, crawler := range crawlers {
+			crawler.Crawl()
 		}
-		time.Sleep(time.Minute)
+		interval = 5 + r.Intn(6)
 	}
 }
 
@@ -94,13 +101,13 @@ func processArticle(db *gorm.DB) {
 		}
 		if err := db.First(&article, "url = ?", article.URL).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				fmt.Printf("new article: %s\n", article.Title)
+				log.Infof("new article: %s\n", article.Title)
 				db.Create(&article)
 				articles = append(articles, article)
 				dingTalkClient.PushArticles(articles)
 			}
 		} else {
-			fmt.Printf("article exist: %s\n", article.Title)
+			log.Infof("article exist: %s\n", article.Title)
 		}
 	}
 }
