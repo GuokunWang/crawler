@@ -40,7 +40,6 @@ cd $CURR_DIR
 ##### make crawler container image #####
 rm -fr ./crawler
 cp $PROJ_DIR/crawler ./crawler
-cp $PROJ_DIR/config.json ./config.json
 check 'copy crawler'
 
 docker build -t crawler:$BRANCH -f Dockerfile .
