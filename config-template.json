@@ -3,13 +3,15 @@
         "webHookUrl": "xxx",
         "secret": "xxx"
     },
-    "penti": {
-        "url": "xxx",
-        "prefix": "xxx",
-        "key": "xxx"
-    },
-    "fuli": {
-        "url": "xxx",
-        "key": "xxx"
-    }
+    "rssCrawlers":[
+        {
+            "name": "penti",
+            "url": "xxxxx",
+            "key": "xxxx"
+        },
+        {
+            "name": "kexue",
+            "url": "xxxxx"
+        }
+    ]
 }

@@ -27,13 +27,6 @@ var articleChan = make(chan Article)
 
 var dingTalkClient = DingTalkClient{}
 
-func init() {
-	RegisterCrawler("penti", &PentiCrawler{})
-	RegisterCrawler("fuli", &FuliCrawler{})
-	RegisterCrawler("kexue", &KexueCrawler{})
-	RegisterCrawler("boduan", &BoduanCrawler{})
-}
-
 func ConfigCrawler(confPath string) {
 	// read config file
 	confFile, err := ioutil.ReadFile(confPath)
@@ -54,11 +47,14 @@ func ConfigCrawler(confPath string) {
 	}
 
 	// init other crawler in map
-	for name, crawler := range crawlers {
-		err := json.Unmarshal(configs[name], crawler)
-		if err != nil {
-			log.Fatal(err)
-		}
+	rssCrawlers := []RssCrawler{}
+	err = json.Unmarshal(configs["rssCrawlers"], &rssCrawlers)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, crawler := range rssCrawlers {
+		RegisterCrawler(crawler.Name, &crawler)
 	}
 }
 
