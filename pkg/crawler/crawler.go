@@ -53,8 +53,8 @@ func ConfigCrawler(confPath string) {
 		log.Fatal(err)
 	}
 
-	for _, crawler := range rssCrawlers {
-		RegisterCrawler(crawler.Name, &crawler)
+	for i, crawler := range rssCrawlers {
+		RegisterCrawler(crawler.Name, &rssCrawlers[i])
 	}
 }
 
