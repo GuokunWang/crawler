@@ -12,8 +12,9 @@ import (
 var prefix = "https://api.live.bilibili.com/room/v1/Room/get_info?room_id="
 
 type BiliStreamCrawler struct {
-	RoomId string `json:"roomId"`
-	Name   string `json:"name"`
+	RoomId     string `json:"roomId"`
+	Name       string `json:"name"`
+	NeedNotify bool
 }
 
 type RoomInfo struct {
@@ -55,10 +56,14 @@ func (r *BiliStreamCrawler) Crawl() error {
 	}
 
 	if resp.Data.LiveStatus == 1 {
-		logrus.Infof("room [%s] start stream", r.Name)
-		textChan <- fmt.Sprintf("[%s]@BiliBili开播: %s", r.Name, resp.Data.Title)
+		if r.NeedNotify {
+			logrus.Infof("room [%s] start stream", r.Name)
+			textChan <- fmt.Sprintf("[%s]@BiliBili开播: %s", r.Name, resp.Data.Title)
+			r.NeedNotify = false
+		}
 	} else {
 		logrus.Infof("room [%s] has not stream", r.Name)
+		r.NeedNotify = true
 	}
 	return nil
 }

@@ -68,6 +68,7 @@ func ConfigCrawler(confPath string) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		biliStreamCrawler.NeedNotify = true
 		RegisterCrawler("biliStreamCrawler", &biliStreamCrawler)
 	}
 }
