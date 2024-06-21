@@ -25,6 +25,8 @@ var crawlers = make(map[string]Crawler)
 
 var articleChan = make(chan Article)
 
+var textChan = make(chan string)
+
 var dingTalkClient = DingTalkClient{}
 
 func ConfigCrawler(confPath string) {
@@ -46,15 +48,27 @@ func ConfigCrawler(confPath string) {
 		log.Fatal(err)
 	}
 
-	// init other crawler in map
-	rssCrawlers := []RssCrawler{}
-	err = json.Unmarshal(configs["rssCrawlers"], &rssCrawlers)
-	if err != nil {
-		log.Fatal(err)
+	// init rss crawler in map
+	if rssConfig, ok := configs["rssCrawlers"]; ok {
+		rssCrawlers := []RssCrawler{}
+		err = json.Unmarshal(rssConfig, &rssCrawlers)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for i, crawler := range rssCrawlers {
+			RegisterCrawler(crawler.Name, &rssCrawlers[i])
+		}
 	}
 
-	for i, crawler := range rssCrawlers {
-		RegisterCrawler(crawler.Name, &rssCrawlers[i])
+	// init bilibili crawler in map
+	if biliConfig, ok := configs["biliStreamCrawler"]; ok {
+		biliStreamCrawler := BiliStreamCrawler{}
+		err = json.Unmarshal(biliConfig, &biliStreamCrawler)
+		if err != nil {
+			log.Fatal(err)
+		}
+		RegisterCrawler("biliStreamCrawler", &biliStreamCrawler)
 	}
 }
 
@@ -81,7 +95,8 @@ func Run(db *gorm.DB) {
 	for {
 		log.Infof("sleep for %d minute", interval)
 		time.Sleep(time.Duration(interval) * time.Minute)
-		for _, crawler := range crawlers {
+		for name, crawler := range crawlers {
+			log.Infof("processing %s", name)
 			crawler.Crawl()
 		}
 		interval = 5 + r.Intn(6)
@@ -90,20 +105,21 @@ func Run(db *gorm.DB) {
 
 func processArticle(db *gorm.DB) {
 	for {
-		articles := []Article{}
-		article, ok := <-articleChan
-		if !ok {
-			break
-		}
-		if err := db.First(&article, "url = ?", article.URL).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				log.Infof("new article: %s\n", article.Title)
-				db.Create(&article)
-				articles = append(articles, article)
-				dingTalkClient.PushArticles(articles)
+		select {
+		case article := <-articleChan:
+			articles := []Article{}
+			if err := db.First(&article, "url = ?", article.URL).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					log.Infof("new article: %s\n", article.Title)
+					db.Create(&article)
+					articles = append(articles, article)
+					dingTalkClient.PushArticles(articles)
+				}
+			} else {
+				log.Infof("article exist: %s\n", article.Title)
 			}
-		} else {
-			log.Infof("article exist: %s\n", article.Title)
+		case text := <-textChan:
+			dingTalkClient.PushText(text)
 		}
 	}
 }
