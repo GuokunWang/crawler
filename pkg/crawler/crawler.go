@@ -71,6 +71,17 @@ func ConfigCrawler(confPath string) {
 		biliStreamCrawler.NeedNotify = true
 		RegisterCrawler("biliStreamCrawler", &biliStreamCrawler)
 	}
+
+	// init douyin crawler in map
+	if douyinConfig, ok := configs["douyinStreamCrawler"]; ok {
+		douyinStreamCrawler := DouyinStreamCrawler{}
+		err = json.Unmarshal(douyinConfig, &douyinStreamCrawler)
+		if err != nil {
+			log.Fatal(err)
+		}
+		douyinStreamCrawler.NeedNotify = true
+		RegisterCrawler("douyinStreamCrawler", &douyinStreamCrawler)
+	}
 }
 
 func RegisterCrawler(name string, crawler Crawler) {
@@ -95,7 +106,7 @@ func Run(db *gorm.DB) {
 	go processArticle(db)
 	for {
 		log.Infof("sleep for %d minute", interval)
-		time.Sleep(time.Duration(interval) * time.Minute)
+		time.Sleep(time.Duration(interval) * time.Second)
 		for name, crawler := range crawlers {
 			log.Infof("processing %s", name)
 			crawler.Crawl()
