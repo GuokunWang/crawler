@@ -106,7 +106,7 @@ func Run(db *gorm.DB) {
 	go processArticle(db)
 	for {
 		log.Infof("sleep for %d minute", interval)
-		time.Sleep(time.Duration(interval) * time.Second)
+		time.Sleep(time.Duration(interval) * time.Minute)
 		for name, crawler := range crawlers {
 			log.Infof("processing %s", name)
 			crawler.Crawl()

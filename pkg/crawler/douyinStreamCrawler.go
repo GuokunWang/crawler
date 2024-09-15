@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var douyinPrefix = "https://live.douyin.com/webcast/room/web/enter/"
+var douyinPrefix = "https://douyin.wtf/api/douyin/web/fetch_user_live_videos"
 
 type DouyinStreamCrawler struct {
 	RoomId     string `json:"roomId"`
@@ -34,15 +34,7 @@ type DouyinResp struct {
 
 func (r *DouyinStreamCrawler) Crawl() error {
 	params := url.Values{}
-	params.Add("aid", "6383")
-	params.Add("device_platform", "web")
-	params.Add("enter_from", "web_live")
-	params.Add("cookie_enabled", "true")
-	params.Add("browser_language", "zh-CN")
-	params.Add("browser_platform", "Win32")
-	params.Add("browser_name", "Chrome")
-	params.Add("browser_version", "109.0.0.0")
-	params.Add("web_rid", r.RoomId)
+	params.Add("webcast_id", r.RoomId)
 
 	douyinUrl := fmt.Sprintf("%s?%s", douyinPrefix, params.Encode())
 
@@ -63,22 +55,25 @@ func (r *DouyinStreamCrawler) Crawl() error {
 		return err
 	}
 
-	var resp DouyinResp
+	resp := struct {
+		Code int        `json:"code"`
+		Data DouyinResp `json:"data"`
+	}{}
 	if err := json.Unmarshal(responseBody, &resp); err != nil {
 		logrus.Errorf("unmarshal response body failed: %s", err.Error())
 		return err
 	}
 
-	if len(resp.Data.Data) == 0 {
+	if len(resp.Data.Data.Data) == 0 {
 		err = fmt.Errorf("response data len < 1: %v", resp)
 		logrus.Error(err.Error())
 		return err
 	}
 
-	if resp.Data.Data[0].Status == 2 {
+	if resp.Data.Data.Data[0].Status == 2 {
 		if r.NeedNotify {
 			logrus.Infof("room [%s] start stream", r.Name)
-			textChan <- fmt.Sprintf("[%s]@Douyin开播: %s", r.Name, resp.Data.Data[0].Title)
+			textChan <- fmt.Sprintf("[%s]@Douyin开播: %s", r.Name, resp.Data.Data.Data[0].Title)
 			r.NeedNotify = false
 		}
 	} else {
