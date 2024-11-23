@@ -62,25 +62,32 @@ func ConfigCrawler(confPath string) {
 	}
 
 	// init bilibili crawler in map
-	if biliConfig, ok := configs["biliStreamCrawler"]; ok {
-		biliStreamCrawler := BiliStreamCrawler{}
-		err = json.Unmarshal(biliConfig, &biliStreamCrawler)
+	if biliConfigs, ok := configs["biliStreamCrawlers"]; ok {
+		bilibiliCrawlers := []BiliStreamCrawler{}
+		err = json.Unmarshal(biliConfigs, &bilibiliCrawlers)
 		if err != nil {
 			log.Fatal(err)
 		}
-		biliStreamCrawler.NeedNotify = true
-		RegisterCrawler("biliStreamCrawler", &biliStreamCrawler)
+
+		for i, crawler := range bilibiliCrawlers {
+			bilibiliCrawlers[i].NeedNotify = true
+			RegisterCrawler(fmt.Sprintf("bili-%s", crawler.Name), &bilibiliCrawlers[i])
+		}
+
 	}
 
 	// init douyin crawler in map
-	if douyinConfig, ok := configs["douyinStreamCrawler"]; ok {
-		douyinStreamCrawler := DouyinStreamCrawler{}
-		err = json.Unmarshal(douyinConfig, &douyinStreamCrawler)
+	if douyinConfigs, ok := configs["douyinStreamCrawlers"]; ok {
+		douyinCrawlers := []DouyinStreamCrawler{}
+		err = json.Unmarshal(douyinConfigs, &douyinCrawlers)
 		if err != nil {
 			log.Fatal(err)
 		}
-		douyinStreamCrawler.NeedNotify = true
-		RegisterCrawler("douyinStreamCrawler", &douyinStreamCrawler)
+
+		for i, crawler := range douyinCrawlers {
+			douyinCrawlers[i].NeedNotify = true
+			RegisterCrawler(fmt.Sprintf("douyin-%s", crawler.Name), &douyinCrawlers[i])
+		}
 	}
 }
 
